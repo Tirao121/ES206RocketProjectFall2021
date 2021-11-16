@@ -2,7 +2,7 @@
 mRocket = 40; %g
 mSand = 20; %g
 m = (mRocket + mSand)/1000; %kg
-A = 5.0*10^-4; %m^2
+A = 5.0*10^-4; %m
 v0 = 30; % m/s
 theta = 60; %deg, launch angle
 p = 1.0583; %density at 5000 ft
