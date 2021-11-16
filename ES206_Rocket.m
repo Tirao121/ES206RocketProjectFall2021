@@ -9,7 +9,7 @@ t = 0;
 dt = 0.1;
 g = 9.8; %m/s^2
 
-% Positoin and Velocity 
+% Position and Velocity 
 x = [];
 y = [];
 vx = [];
