@@ -7,11 +7,12 @@
 
 % Rocket Design inputs
 A = 5.0*10^-4;
-CD = 1.3;
+Cd = .1;
+CdChute = 1.3;
 mRocket = 40; %g
-mSand = 20; %g
+mSand = 0; %g
 m = (mRocket + mSand)/1000; %kg
-theta = 30; %deg, launch angle, measured from the vertical
+theta = 1; %deg, launch angle, measured from the vertical
 deltaT = 0.001;
 delayCharge = 3;
 g = 9.81;
@@ -54,10 +55,9 @@ while Vy(n) <= 0
     end
 end
 
-fprintf("Velocity off the rail is %.2f\n", V)
+fprintf("Velocity off the rail is %.2f, Vx = %.2f, Vy = %.2f\n", V, Vx(n), Vy(n))
 fprintf("n = %.0f\n", n)
 
-%{
 %Main trajectory loop rocket off the rail, direction based on orientation determined from speed
 while n <= 100
     if n <= length(T)    % Boost
@@ -66,7 +66,7 @@ while n <= 100
         V = sqrt(Vx(n)^2 + Vy(n)^2);
    
         %Drag due to rocket
-        FD = 0.5 * rho * A * V^2 * CD;
+        FD = 0.5 * rho * A * V^2 * Cd;
         FDx = FD*Vx(n)/V;
         FDy = FD*Vy(n)/V;
 
@@ -82,8 +82,7 @@ while n <= 100
     fprintf("%.0\n",n)
     n = n+1;
 end
-%}
-
+%{%}
 %{
     elseif t >= delayCharge  %chute deployed
         x(n+1) = x(n) + Vx(n)*deltaT;
@@ -136,7 +135,7 @@ end
     n=n+1;
 end
 
+%}
 hold off
 plot(x,y)
-%}
 
