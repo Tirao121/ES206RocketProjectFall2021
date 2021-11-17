@@ -13,6 +13,7 @@ mRocket = 40; %g
 mSand = 0; %g
 m = (mRocket + mSand)/1000; %kg
 theta = 1; %deg, launch angle, measured from the vertical
+railLength = 2; %length of rail the rocket will launch from - assuming 2ft
 deltaT = 0.001;
 delayCharge = 3;
 g = 9.81;
@@ -22,6 +23,7 @@ vWind = 0; %check on day of launch
     %Start at rest
     x(1) = 0;
     y(1) = 0;
+    s(1) = 0;
     Vx(1) = 0;
     Vy(1) = 0;
     t = 0;
@@ -34,12 +36,16 @@ PRESCOTT_ELEVATION = 5367; %ft
 %while y(n) >= 0
 
 %initial velocity loop
-while Vy(n) <= 0 && s <= railLength
+while Vy(n) <= 0 || s(n) <= railLength
+    V = sqrt(Vx(n)^2 + Vy(n)^2);
     if Vy(n) <= 0
         x(n+1) = 0;
         y(n+1) = 0;
+        s(n+1) = 0;
     else
-        s(n+1) = s(n)+; 
+        s(n+1) = s(n) + deltaT * sqrt((V*cosd(theta))^2 + (V*sind(theta)^2)); 
+        x(n+1) = s(n+1)*sind(theta);
+        y(n+1) = s(n+1)*cosd(theta);
     end
     
     %Drag = 0
@@ -49,7 +55,6 @@ while Vy(n) <= 0 && s <= railLength
 
     Vx(n+1) = Vx(n) + deltaT * (Tx/m);
     Vy(n+1) = Vy(n) + deltaT * (- g + Ty/m);
-    V = sqrt(Vx(n)^2 + Vy(n)^2);
     t(n+1) = t(n) + deltaT;
 
     n = n+1;
@@ -63,7 +68,7 @@ fprintf("Velocity off the rail is %.2f, Vx = %.2f, Vy = %.2f\n", V, Vx(n), Vy(n)
 fprintf("n = %.0f\n", n)
 
 %Main trajectory loop rocket off the rail, direction based on orientation determined from speed
-while n <= 100
+while n <= 20000
     if n <= length(T)    % Boost
         x(n+1) = x(n) + Vx(n)*deltaT;
         y(n+1) = y(n) + Vy(n)*deltaT;
@@ -81,12 +86,7 @@ while n <= 100
         %Positioning
         Vx(n+1) = Vx(n) + deltaT * (-FDx/m + Tx/m);
         Vy(n+1) = Vy(n) + deltaT * (-FDy/m - g + Ty/m);
-        t(n+1) = t(n) + deltaT;
-    end
-    fprintf("%.0\n",n)
-    n = n+1;
-end
-%{%}
+        t = t + deltaT;
 %{
     elseif t >= delayCharge  %chute deployed
         x(n+1) = x(n) + Vx(n)*deltaT;
@@ -108,38 +108,39 @@ end
         Vy(n+1) = Vy(n) + deltaT*(-FDy/m-g);
         t(n+1)=t(n) + deltaT;
         fprintf("Chute\n")
-
+%}
     else        % Burnout
         x(n+1) = x(n) + Vx(n)*deltaT;
         y(n+1) = y(n) + Vy(n)*deltaT;
         V = sqrt(Vx(n)^2 + Vy(n)^2);
         
         %Drag due to rocket
-        FD = 0.5*rho*A*V^2*CD;
+        FD = 0.5*rho*A*V^2*Cd;
         FDx = FD*Vx(n)/V;
         FDy = FD*Vy(n)/V;
         
         %Positioning
         Vx(n+1) = Vx(n) + deltaT*(-FDx/m);
-        Vy(n+1) = Vy(n) + deltaT*(-FDy/m + g);
-        t(n+1) = t(n)+deltaT;
-    end
-
-
-    %{
-    if y(n+1) < 0
-        break
-    end
-    %}
-
-    if n == 800
-        break
+        Vy(n+1) = Vy(n) + deltaT*(-FDy/m - g);
+        t = t + deltaT;
     end
     
+    
+
+    if y(n+1) <= 0
+        fprintf("%f\n",y(n+1))
+        break
+    end
+
     n=n+1;
 end
 
-%}
 hold off
 plot(x,y)
+xlabel("Distance (m)")
+ylabel("Height (m)")
+Title("Rocket Trajectory")
 
+fprintf("\nTotal flight time = %.3f\n", t);
+fprintf("Apogee = %.3f\n", nan);
+fprintf("Ground hit velocity is ")

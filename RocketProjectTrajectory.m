@@ -26,6 +26,7 @@ vWind = 0; %check on day of launch
     s(1) = 0;
     Vx(1) = 0;
     Vy(1) = 0;
+    apogee = railLength*cosd(theta);
     t = 0;
 n = 1;
 
@@ -55,7 +56,7 @@ while Vy(n) <= 0 || s(n) <= railLength
 
     Vx(n+1) = Vx(n) + deltaT * (Tx/m);
     Vy(n+1) = Vy(n) + deltaT * (- g + Ty/m);
-    t(n+1) = t(n) + deltaT;
+    t = t + deltaT;
 
     n = n+1;
     if n>length(T)
@@ -65,10 +66,10 @@ while Vy(n) <= 0 || s(n) <= railLength
 end
 
 fprintf("Velocity off the rail is %.2f, Vx = %.2f, Vy = %.2f\n", V, Vx(n), Vy(n))
-fprintf("n = %.0f\n", n)
+fprintf("n = %.0f\n", n);
 
 %Main trajectory loop rocket off the rail, direction based on orientation determined from speed
-while n <= 800
+while n <= 20000
     if n <= length(T)    % Boost
         x(n+1) = x(n) + Vx(n)*deltaT;
         y(n+1) = y(n) + Vy(n)*deltaT;
@@ -86,7 +87,8 @@ while n <= 800
         %Positioning
         Vx(n+1) = Vx(n) + deltaT * (-FDx/m + Tx/m);
         Vy(n+1) = Vy(n) + deltaT * (-FDy/m - g + Ty/m);
-        t(n+1) = t(n) + deltaT;
+        t = t + deltaT;
+
 %{
     elseif t >= delayCharge  %chute deployed
         x(n+1) = x(n) + Vx(n)*deltaT;
@@ -120,25 +122,28 @@ while n <= 800
         FDy = FD*Vy(n)/V;
         
         %Positioning
-        Vx(n+1) = Vx(n) + deltaT*(-FDx/m);
-        Vy(n+1) = Vy(n) + deltaT*(-FDy/m - g);
-        t(n+1) = t(n)+deltaT;
-    end
-
-
-    %{
-    if y(n+1) < 0
-        break
-    end
-    %}
-
-    if n == 800
-        break
+            Vx(n+1) = Vx(n) + deltaT*(-FDx/m);
+            Vy(n+1) = Vy(n) + deltaT*(-FDy/m - g);
+        t = t + deltaT;
     end
     
+    if y(n) > apogee
+        apogee = y(n);
+    end
+    
+    if y(n+1) <= 0
+        break
+    end
+
     n=n+1;
 end
 
 hold off
 plot(x,y)
+xlabel("Distance (m)")
+ylabel("Height (m)")
+title("Rocket Trajectory")
 
+fprintf("\nTotal flight time = %.3f seconds\n", t);
+fprintf("Apogee = %.3f m\n", apogee);
+fprintf("Ground hit velocity = %.4f m/s\n", V);
