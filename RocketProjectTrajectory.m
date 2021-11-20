@@ -6,20 +6,25 @@
 [tT,T] = RocketProjectThrustCurve;
 
 % Rocket Design inputs
-A = 5.0*10^-4;
-Cd = .1;
-CdChute = 1.3;
 mRocket = 19.25; %g
 mSand = 0; %g
 m = (mRocket + mSand)/1000; %kg
-theta = 1; %deg, launch angle, measured from the vertical
-RAIL_LENGTH = 2/3.28; %ft, length of rail the rocket will launch from
-RAIL_LENGTH = RAIL_LENGTH/3.208084; %Conversion from ft to m
-deltaT = 0.001;
-delayCharge = 3;
-g = 9.81;
+A = 5.0*10^-4; %Cross sectional area of the rocket
 
-%initial conditions
+%Chute design inputs
+Cd = .1;
+CdChute = 1.3;
+delayCharge = 3;
+dChute = 13.75; %in, Diameter of the chute
+dChute = dChute*2.54/10;
+AChute = (dChute^2) * pi/4;
+
+%Launch Inputs
+theta = 45; %deg, launch angle, measured from the vertical
+RAIL_LENGTH = 2; %ft, length of rail the rocket will launch from
+RAIL_LENGTH = RAIL_LENGTH/3.28084; %Conversion from ft to m
+
+%Initial conditions
 vWind = 0; %check on day of launch
     %Start at rest
     x(1) = 0;
@@ -30,13 +35,14 @@ vWind = 0; %check on day of launch
     Vy(1) = 0;
     apogee = RAIL_LENGTH*cosd(theta);
     t = 0;
+deltaT = 0.001;
 n = 1;
 
+g = 9.81;
 PRESCOTT_ELEVATION = 5367; %ft
 [Temp, a, P, rho] = atmosisa(PRESCOTT_ELEVATION * 0.3048);
 
-%TODO: Implement Thrust (F) and relative velocity (Vrel)
-%while y(n) >= 0
+%TODO: Implement Chute stage and relative velocity (Vrel)
 
 %initial velocity loop
 while Vy(n) <= 0 || s(n) <= RAIL_LENGTH
@@ -106,12 +112,12 @@ while n <= 20000
         V = sqrt(Vx(n)^2 + Vy(n)^2);
         
         %Drag due to rocket
-        FD = 0.5*rho*A*V^2*CD;
+        FD = 0.5*rho*A*V^2*Cd;
         FDx = FD*Vx(n)/V;
         FDy = FD*Vy(n)/V;
         
         %Drag due to chute
-        FD = FD + 0.5 * rho * A * V^2 * CD;
+        FD = FD + 0.5 * rho * AChute * V^2 * CdChute;
         FDx = FDx + FD * Vx(n)/V;
         FDy = FDy + FD * Vy(n)/V;
  
@@ -119,7 +125,6 @@ while n <= 20000
         Vx(n+1)=Vx(n) + deltaT*-(FDx)/m;
         Vy(n+1) = Vy(n) + deltaT*(-FDy/m-g);
         t(n+1)=t(n) + deltaT;
-        fprintf("Chute\n")
 %}
     else        % Burnout
         x(n+1) = x(n) + Vx(n)*deltaT;
@@ -132,8 +137,9 @@ while n <= 20000
         FDy = FD*Vy(n)/V;
         
         %Positioning
-            Vx(n+1) = Vx(n) + deltaT*(-FDx/m);
-            Vy(n+1) = Vy(n) + deltaT*(-FDy/m - g);
+        Vx(n+1) = Vx(n) + deltaT*(-FDx/m);
+        Vy(n+1) = Vy(n) + deltaT*(-FDy/m - g);
+
         t = t + deltaT;
     end
     
