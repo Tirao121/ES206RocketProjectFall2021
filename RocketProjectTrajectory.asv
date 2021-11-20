@@ -13,8 +13,7 @@ mRocket = 19.25; %g
 mSand = 0; %g
 m = (mRocket + mSand)/1000; %kg
 theta = 1; %deg, launch angle, measured from the vertical
-RAIL_LENGTH = 2/3.28; %ft, length of rail the rocket will launch from
-RAIL_LENGTH = RAIL_LENGTH/3.208084; %Conversion from ft to m
+RAIL_LENGTH = 2; %length of rail the rocket will launch from - assuming 2ft
 deltaT = 0.001;
 delayCharge = 3;
 g = 9.81;
@@ -49,13 +48,14 @@ while Vy(n) <= 0 || s(n) <= RAIL_LENGTH
         %Drag = 0
         FD = 0;
     else
-        s(n+1) = s(n) + deltaT * V; 
+        s(n+1) = s(n) + deltaT * sqrt((V*cosd(theta))^2 + (V*sind(theta)^2)); 
         x(n+1) = s(n+1)*sind(theta);
         y(n+1) = s(n+1)*cosd(theta);
 
         %Drag
-        FD = 0.5 * rho * A * V^2 * Cd;
+
     end
+   
 
     %Normal-Tangential Coordinate System
     Vn(n+1) = Vn(n) + deltaT * (T(n) - FD - m*g*cosd(theta))/m;
